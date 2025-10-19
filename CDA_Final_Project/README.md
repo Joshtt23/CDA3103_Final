@@ -20,8 +20,6 @@ This project implements a MIPS processor simulator that demonstrates the functio
 
 ```
 CDA_Final_Project/
-├── .cursor/
-│   └── rules.md              # Comprehensive project guidelines
 ├── docs/
 │   ├── instructions_table.png # Figure 1: 14 MIPS instructions
 │   └── datapath_diagram.png   # Figure 2: Single-cycle datapath

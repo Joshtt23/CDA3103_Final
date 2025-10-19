@@ -77,7 +77,8 @@ int instruction_fetch(unsigned PC,unsigned *Mem,unsigned *instruction)
     unsigned memIndex = PC >> 2;
     
     // Check if memory index is within bounds
-    if (memIndex >= (65536 >> 2)) { // MEMSIZE = 65536 >> 2
+    // MEMSIZE is 65536 >> 2 = 16384, so valid indices are 0 to 16383
+    if (memIndex >= 16384) {
         return 1; // Halt condition: memory access beyond bounds
     }
     
@@ -139,42 +140,49 @@ int instruction_decode(unsigned op,struct_controls *controls)
             break;
             
         case OPCODE_ADDI: // addi
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 0;     // 000 - addition
             break;
             
         case OPCODE_SLTI: // slti
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 2;     // 010 - set less than
             break;
             
         case OPCODE_SLTIU: // sltiu
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 3;     // 011 - set less than unsigned
             break;
             
         case OPCODE_ANDI: // andi
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 4;     // 100 - AND
             break;
             
         case OPCODE_ORI: // ori
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 5;     // 101 - OR
             break;
             
         case OPCODE_LUI: // lui
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->RegWrite = 1;  // write to register
             controls->ALUSrc = 1;    // use immediate value
             controls->ALUOp = 6;     // 110 - shift left by 16
             break;
             
         case OPCODE_LW: // lw
+            controls->RegDst = 0;    // rt field for I-type instructions
             controls->MemRead = 1;   // read from memory
             controls->RegWrite = 1;  // write to register
             controls->MemtoReg = 1;  // data from memory
@@ -191,6 +199,7 @@ int instruction_decode(unsigned op,struct_controls *controls)
         case OPCODE_BEQ: // beq
             controls->Branch = 1;    // branch instruction
             controls->ALUOp = 1;     // 001 - subtraction for comparison
+            controls->ALUSrc = 0;    // use register values for comparison
             break;
             
         case OPCODE_J: // j
@@ -287,31 +296,35 @@ int ALU_operations(unsigned data1,unsigned data2,unsigned extended_value,unsigne
 /* 10 Points - Full Marks: Read and write operations with correct halt conditions */
 int rw_memory(unsigned ALUresult,unsigned data2,char MemWrite,char MemRead,unsigned *memdata,unsigned *Mem)
 {
-    // Check word alignment for address
-    if (ALUresult & 0x3) {
-        return 1; // Halt condition: non-word-aligned address
-    }
-    
-    // Check if address is within memory bounds (0x0000 to 0xFFFF)
-    if (ALUresult > 0xFFFF) {
-        return 1; // Halt condition: address beyond memory
-    }
-    
-    unsigned memIndex = ALUresult >> 2;
-    
-    // Check if memory index is within bounds
-    if (memIndex >= (65536 >> 2)) {
-        return 1; // Halt condition: memory access beyond bounds
-    }
-    
-    // Memory write operation
-    if (MemWrite == 1) {
-        Mem[memIndex] = data2;
-    }
-    
-    // Memory read operation
-    if (MemRead == 1) {
-        *memdata = Mem[memIndex];
+    // Only check memory bounds and alignment if we're actually accessing memory
+    if (MemWrite == 1 || MemRead == 1) {
+        // Check word alignment for address
+        if (ALUresult & 0x3) {
+            return 1; // Halt condition: non-word-aligned address
+        }
+        
+        // Check if address is within memory bounds (0x0000 to 0xFFFF)
+        if (ALUresult > 0xFFFF) {
+            return 1; // Halt condition: address beyond memory
+        }
+        
+        unsigned memIndex = ALUresult >> 2;
+        
+        // Check if memory index is within bounds
+        // MEMSIZE is 65536 >> 2 = 16384, so valid indices are 0 to 16383
+        if (memIndex >= 16384) {
+            return 1; // Halt condition: memory access beyond bounds
+        }
+        
+        // Memory write operation
+        if (MemWrite == 1) {
+            Mem[memIndex] = data2;
+        }
+        
+        // Memory read operation
+        if (MemRead == 1) {
+            *memdata = Mem[memIndex];
+        }
     }
     
     return 0; // No halt condition
@@ -355,15 +368,9 @@ void PC_update(unsigned jsec,unsigned extended_value,char Branch,char Jump,char 
     
     // Handle jump instruction
     if (Jump == 1) {
-        // Jump: Left shift jsec by 2 and use upper 4 bits of current PC
+        // Jump: Left shift jsec by 2 and use upper 4 bits of current PC+4
         unsigned jumpAddr = jsec << 2;
         jumpAddr |= ((*PC + 4) & 0xF0000000); // Take upper 4 bits from PC+4
-        
-        // Check word alignment for jump address
-        if (jumpAddr & 0x3) {
-            // This should be handled as a halt condition in the calling function
-            // but we'll just proceed with the jump address as-is for now
-        }
         
         nextPC = jumpAddr;
     }
