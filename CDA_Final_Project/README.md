@@ -21,16 +21,19 @@ This project implements a MIPS processor simulator that demonstrates the functio
 ```
 CDA_Final_Project/
 ├── .cursor/
-│   └── rules.md          # Project-specific guidelines
+│   └── rules.md              # Comprehensive project guidelines
+├── docs/
+│   ├── instructions_table.png # Figure 1: 14 MIPS instructions
+│   └── datapath_diagram.png   # Figure 2: Single-cycle datapath
 ├── src/
-│   ├── spimcore.c        # Main program (DO NOT MODIFY)
-│   ├── spimcore.h        # Header file (DO NOT MODIFY)
-│   └── project.c         # Implementation file (TO BE FILLED)
+│   ├── spimcore.c            # Main program (DO NOT MODIFY)
+│   ├── spimcore.h            # Header file (DO NOT MODIFY)
+│   └── project.c             # Implementation file (TO BE FILLED)
 ├── test/
-│   └── *.asc             # Test machine code files
-├── Makefile              # Compilation instructions
-├── .gitignore            # Git ignore file
-└── README.md             # This file
+│   └── *.asc                 # Test machine code files
+├── Makefile                  # Compilation instructions
+├── .gitignore                # Git ignore file
+└── README.md                 # This file
 ```
 
 ## Setup Instructions
